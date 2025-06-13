@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
   secure: false,
@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransporter({
 
 export const sendVerificationEmail = async (email, firstName, otp) => {
   const mailOptions = {
-    from: `"Finora" <${process.env.EMAIL_USER}>`,
+    from: `"Nexus" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Verify Your Email Address",
     html: `
@@ -40,7 +40,7 @@ export const sendPasswordResetEmail = async (email, firstName, resetToken) => {
   const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password?token=${resetToken}`;
 
   const mailOptions = {
-    from: `"Finora" <${process.env.EMAIL_USER}>`,
+    from: `"Nexus" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Reset Your Password",
     html: `
@@ -69,13 +69,13 @@ export const sendPasswordResetEmail = async (email, firstName, resetToken) => {
 // Send welcome email after verification
 export const sendWelcomeEmail = async (email, firstName) => {
   const mailOptions = {
-    from: `"Finora" <${process.env.EMAIL_USER}>`,
+    from: `"Nexus" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Welcome to Finora!",
+    subject: "Welcome to Nexus!",
     html: `
       <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
         <h2>Welcome aboard, ${firstName}! 🎉</h2>
-        <p>Your email has been verified successfully. You're all set to start managing your finances with Finora.</p>
+        <p>Your email has been verified successfully. You're all set to start managing your projects and issues with nexus.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.CLIENT_URL}/dashboard"
              style="background-color: #28a745; color: white; padding: 12px 30px;
@@ -83,8 +83,8 @@ export const sendWelcomeEmail = async (email, firstName) => {
             Go to Dashboard
           </a>
         </div>
-        <p>Happy tracking!</p>
-        <p>The Finora Team - Mayank Verma</p>
+        <p>Feel free to explore the features and start collaborating with your team.</p>
+        <p>The Nexus Team - Mayank Verma</p>
       </div>
     `,
   };

@@ -1,4 +1,4 @@
-import { User } from "../model/index.js";
+import { User } from "../models/index.js";
 import * as jwt from "../utils/jwt.js";
 import * as emailService from "../services/emailService.js";
 import { setCookies, removeCookies } from "../utils/cookies.js";
@@ -246,7 +246,7 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-export const resendVerificationEmail = async (req, res) => {
+export const resendOtp = async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -283,7 +283,7 @@ export const resendVerificationEmail = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      message: "Verification email sent successfully",
+      message: "OTP sent on email successfully",
     });
   } catch (error) {
     console.error("Resend verification error:", error);
