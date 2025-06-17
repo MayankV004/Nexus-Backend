@@ -92,12 +92,12 @@ export const login = async (req, res) => {
       });
     }
     
-    if (!user.isEmailVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email first",
-      });
-    }
+    // if (!user.isEmailVerified) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Please verify your email first",
+    //   });
+    // }
 
     // removing old/expired refresh tokens
     user.refreshToken = user.refreshToken.filter(

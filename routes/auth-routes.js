@@ -3,7 +3,7 @@ import * as auth from '../controllers/authControllers.js';
 import { protectRoute } from '../middleware/auth.js';
 const router = express.Router();
 
-router.get('/login',auth.login)
+router.post('/login',auth.login)
 router.post('/register',auth.signUp)
 router.post('/logout', protectRoute ,auth.logout);
 
