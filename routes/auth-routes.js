@@ -11,6 +11,8 @@ router.post('/verify-email', auth.verifyEmail);
 router.post('/resend-otp', auth.resendOtp);
 router.post('/forgot-password', auth.forgotPassword);
 router.post('/reset-password', auth.resetPassword);
+router.post('/change-password', protectRoute, auth.changePassword);
+router.post('/refresh-token', auth.refreshToken);
 
 
 export default router;

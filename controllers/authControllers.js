@@ -60,6 +60,10 @@ export const signUp = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Registration successful. Please check your email to verify your account.",
+      data:{
+        email: user.email,
+
+      }
     });
   } catch (error) {
     console.error("SignUp error:", error);
@@ -92,12 +96,12 @@ export const login = async (req, res) => {
       });
     }
     
-    // if (!user.isEmailVerified) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: "Please verify your email first",
-    //   });
-    // }
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first",
+      });
+    }
 
     // removing old/expired refresh tokens
     user.refreshToken = user.refreshToken.filter(
@@ -314,7 +318,7 @@ export const refreshToken = async (req, res) => {
         message: "Invalid or expired refresh token",
       });
     }
-
+    console.log("Decoded refresh token:", decoded);
     const user = await User.findById(decoded.userId);
     if (!user) {
       return res.status(404).json({

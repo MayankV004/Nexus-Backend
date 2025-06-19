@@ -29,7 +29,7 @@ export const protectRoute = async (req, res, next) => {
         message: 'Email not verified' 
       });
     }
-    console.log("Check : ", user)
+    // console.log("Check : ", user)
     req.user = user;
     next();
   } catch (error) {

@@ -4,13 +4,16 @@ import connectDB from './config/db.js';
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
-import authRoutes from "./routes/auth-routes.js";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import userRoutes from "./routes/user-routes.js";
+import authRoutes from "./routes/auth-routes.js";
+import projectRoutes from "./routes/project-routes.js";
+import issueRoutes from "./routes/issue-routes.js";
 
 dotenv.config();
 const app = express();
-
+const PORT = process.env.PORT || 5000;
 connectDB()
 
 const corsOptions = { 
@@ -65,10 +68,13 @@ app.use(morgan("dev"));
 //Routes
 
 app.get('/',(req,res)=>{
-    res.send("Server is Running!")
+    res.send("Nexus Server is Running!")
 })
 
+app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/projects", projectRoutes);
+app.use("/api/v1/issues", issueRoutes);
 
 
 
@@ -94,6 +100,6 @@ app.use((error, req, res, next) => {
 })
 
 
-app.listen(5000, ()=>{
+app.listen(PORT, ()=>{
     console.log("Server is Running on PORT 5000!")
 })
