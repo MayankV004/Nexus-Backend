@@ -1,5 +1,5 @@
 import { User} from '../models/index.js'
-
+import mongoose from 'mongoose';
 // Validation helper
 const validateObjectId = (id) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
