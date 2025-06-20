@@ -68,6 +68,7 @@ export const getProjectById = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { name, description, priority, dueDate, template, tags, members } = req.body;
+    console.log("Creating project with data:", req.body);
     const creatorId = req.user._id
 
     // Check required fields
@@ -90,6 +91,7 @@ export const createProject = async (req, res) => {
       }
     }
 
+    console.log("Creating project with creatorId:", creatorId);
     const project = new Project({
       name: name.trim(),
       description: description || '',
@@ -99,11 +101,11 @@ export const createProject = async (req, res) => {
       tags: tags || [],
       members: members || []
     });
-
+    console.log("Project object created:", project);
     const savedProject = await project.save();
 
     // Adding project to creator's project list
-    const user = await User.findByIdAndUpdate(creatorId, {
+    const user = await User.findByIdAndUpdate({_id : creatorId}, {
       $push:{
         projects:{
           projectid: savedProject._id,
@@ -113,12 +115,12 @@ export const createProject = async (req, res) => {
         }
       }
     })
-
+    console.log("User updated with new project:", user);
     // adding project to all members project list
     if( members && members.length > 0) {
       for (const member of members) {
-        const user = await User.findOneAndUpdate({ email: member.email })
-        if(user){
+        const TeamMember = await User.findOneAndUpdate({ email: member.email })
+        if( TeamMember && !user ) {
           await User.findByIdAndUpdate(user._id, {
             $push: {
               projects: {
