@@ -1,4 +1,4 @@
-import {Issue , Project} from '../models/index.js';
+import {Issue , Project ,User} from '../models/index.js';
 import mongoose from 'mongoose';
 
 // Validation helper
@@ -135,6 +135,25 @@ export const createIssue = async (req, res) => {
       { $inc: { issues: 1 } }
     );
 
+    // Add issue to assignee's assignedIssues array
+    if (assignee && assignee.email) {
+      const user = await User.findOne({ email: assignee.email });
+      if (user) {
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $push: {
+              assignedIssues: {
+                issueId: savedIssue._id,
+                assignedAt: new Date(),
+                status: savedIssue.status
+              }
+            }
+          }
+        );
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Issue created successfully',
@@ -195,6 +214,60 @@ export const updateIssue = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
+    // Handle assignee changes
+    if (req.body.assignee) {
+      // Remove from previous assignee if exists
+      if (existingIssue.assignee && existingIssue.assignee.email) {
+        const previousUser = await User.findOne({ email: existingIssue.assignee.email });
+        if (previousUser) {
+          await User.findByIdAndUpdate(
+            previousUser._id,
+            {
+              $pull: {
+                assignedIssues: { issueId: id }
+              }
+            }
+          );
+        }
+      }
+
+      // Add to new assignee
+      if (req.body.assignee.email) {
+        const newUser = await User.findOne({ email: req.body.assignee.email });
+        if (newUser) {
+          await User.findByIdAndUpdate(
+            newUser._id,
+            {
+              $push: {
+                assignedIssues: {
+                  issueId: id,
+                  assignedAt: new Date(),
+                  status: issue.status
+                }
+              }
+            }
+          );
+        }
+      }
+    }
+
+    // Update status in user's assignedIssues if status changed
+    if (req.body.status && issue.assignee && issue.assignee.email) {
+      const user = await User.findOne({ email: issue.assignee.email });
+      if (user) {
+        await User.findOneAndUpdate(
+          { 
+            _id: user._id,
+            'assignedIssues.issueId': id 
+          },
+          {
+            $set: {
+              'assignedIssues.$.status': req.body.status
+            }
+          }
+        );
+      }
+    }
     
     res.json({
       success: true,
@@ -247,6 +320,21 @@ export const deleteIssue = async (req, res) => {
       issue.projectId,
       { $inc: { issues: -1 } }
     );
+
+    // Remove issue from assignee's assignedIssues array
+    if (issue.assignee && issue.assignee.email) {
+      const user = await User.findOne({ email: issue.assignee.email });
+      if (user) {
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $pull: {
+              assignedIssues: { issueId: id }
+            }
+          }
+        );
+      }
+    }
 
     res.json({ 
       success: true,

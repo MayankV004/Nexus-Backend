@@ -8,8 +8,11 @@ import {
   addMember,
   removeMember
 } from '../controllers/projectControllers.js';
+import { protectRoute } from '../middleware/auth.js';
 
 const router = express.Router();
+
+router.use(protectRoute); // Protect all routes in this file
 
 router.get('/', getAllProjects); //Get all projects
 router.get('/:id', getProjectById); //Get project by ID

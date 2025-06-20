@@ -77,7 +77,49 @@ const userSchema = new mongoose.Schema(
       },
     ],
     lastLogin: Date,
+    bio: {
+  type: String,
+  default: "",
+  maxlength: [500, "Bio cannot exceed 500 characters"]
+},
+location: {
+  type: String,
+  default: "",
+  maxlength: [100, "Location cannot exceed 100 characters"]
+},
+phoneNumber: {
+  type: String,
+  default: "",
+  match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"]
+},
+projects: [{
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project'
   },
+  role: String, // Role in this specific project
+  joinedAt: {
+    type: Date,
+    default: Date.now
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}],
+assignedIssues: [{
+  issueId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Issue'
+  },
+  assignedAt: {
+    type: Date,
+    default: Date.now
+  },
+  status: String // Current status of the issue
+}]
+  },
+
   { timestamps: true }
 );
 

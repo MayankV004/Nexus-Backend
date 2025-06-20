@@ -1,4 +1,4 @@
-import { Project } from '../models/index.js';
+import { Project,User } from '../models/index.js';
 import mongoose from 'mongoose';
 
 // Validation helper
@@ -68,6 +68,7 @@ export const getProjectById = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { name, description, priority, dueDate, template, tags, members } = req.body;
+    const creatorId = req.user._id
 
     // Check required fields
     if (!name || name.trim() === '') {
@@ -100,6 +101,37 @@ export const createProject = async (req, res) => {
     });
 
     const savedProject = await project.save();
+
+    // Adding project to creator's project list
+    const user = await User.findByIdAndUpdate(creatorId, {
+      $push:{
+        projects:{
+          projectid: savedProject._id,
+          role: "Creator",
+          joinedAt: new Date(),
+          isActive: true
+        }
+      }
+    })
+
+    // adding project to all members project list
+    if( members && members.length > 0) {
+      for (const member of members) {
+        const user = await User.findOneAndUpdate({ email: member.email })
+        if(user){
+          await User.findByIdAndUpdate(user._id, {
+            $push: {
+              projects: {
+                projectid: savedProject._id,
+                role: member.role,
+                joinedAt: new Date(),
+                isActive: true
+              }
+            }})
+        }
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Project created successfully',
@@ -257,8 +289,33 @@ export const addMember = async (req, res) => {
 
     project.members.push({ name, email, role, avatar: avatar || '' });
     await project.save();
+
+    // Add project to user's projects array
+    const user = await User.findOne({ email });
+    if (user) {
+      // Check if project already exists in user's projects
+      const existingProject = user.projects.find(
+        p => p.projectId.toString() === id
+      );
+      
+      if (!existingProject) {
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $push: {
+              projects: {
+                projectId: id,
+                role: role,
+                joinedAt: new Date(),
+                isActive: true
+              }
+            }
+          }
+        );
+      }
+    }
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Member added successfully',
       data: project
@@ -282,7 +339,7 @@ export const addMember = async (req, res) => {
       });
     }
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Error adding member',
       error: error.message 
@@ -316,9 +373,23 @@ export const removeMember = async (req, res) => {
       });
     }
 
+    const memberEmail = project.members[memberIndex].email;
+
     project.members.splice(memberIndex, 1);
     await project.save();
     
+    // Remove project from user's projects array
+    const user = await User.findOne({ email: memberEmail });
+    if (user) {
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $pull: {
+            projects: { projectId: id }
+          }
+        }
+      );
+    }
     res.json({
       success: true,
       message: 'Member removed successfully',
