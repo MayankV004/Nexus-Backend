@@ -318,7 +318,7 @@ export const refreshToken = async (req, res) => {
         message: "Invalid or expired refresh token",
       });
     }
-    console.log("Decoded refresh token:", decoded);
+    // console.log("Decoded refresh token:", decoded);
     const user = await User.findById(decoded.userId);
     if (!user) {
       return res.status(404).json({
@@ -351,7 +351,7 @@ export const refreshToken = async (req, res) => {
 
     // Remove old refresh token and add new one
     user.refreshToken = user.refreshToken.filter(
-      (token) => token.token !== refreshToken
+      (t) => t.token !== refreshToken
     );
     user.refreshToken.push({
       token: newRefreshToken,

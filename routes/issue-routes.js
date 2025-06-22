@@ -4,7 +4,8 @@ import {
   getIssueById,
   createIssue,
   updateIssue,
-  deleteIssue
+  deleteIssue,
+  getAllIssues
 } from '../controllers/issueControllers.js';
 import { protectRoute } from '../middleware/auth.js';
 
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.use(protectRoute); // Protect all routes in this file
 
+router.get('/', getAllIssues)
 router.get('/project/:projectId', getIssuesByProject); //Get all issues for a project
 router.get('/:id', getIssueById); // Get issue by ID
 

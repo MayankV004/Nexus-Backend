@@ -11,7 +11,30 @@ const validateObjectId = (id) => {
 // Get all projects
 export const getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+
+    const userId = req.user._id;
+
+    // finding user
+    const user = await User.findById(userId).populate({
+      path:'projects.projectId',
+      model:'Project'
+    })
+
+    if(!user)
+    {
+      return res.status(404).json({
+        success:false,
+        message:'User not Found'
+      })
+    }
+
+
+
+    const projects = user.projects.filter(project => project.isActive && project.projectId).map(project => ({
+      ...project.projectId.toObject(),
+      userRole: project.role,
+      joinedAt: project.joinedAt
+    })).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by createdAt date
     
     res.json({
       success: true,
@@ -68,7 +91,7 @@ export const getProjectById = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { name, description, priority, dueDate, template, tags, members } = req.body;
-    console.log("Creating project with data:", req.body);
+    // console.log("Creating project with data:", req.body);
     const creatorId = req.user._id
 
     // Check required fields
@@ -91,7 +114,7 @@ export const createProject = async (req, res) => {
       }
     }
 
-    console.log("Creating project with creatorId:", creatorId);
+    // console.log("Creating project with creatorId:", creatorId);
     const project = new Project({
       name: name.trim(),
       description: description || '',
@@ -101,7 +124,7 @@ export const createProject = async (req, res) => {
       tags: tags || [],
       members: members || []
     });
-    console.log("Project object created:", project);
+    // console.log("Project object created:", project);
     const savedProject = await project.save();
 
     // Adding project to creator's project list
@@ -115,7 +138,7 @@ export const createProject = async (req, res) => {
         }
       }
     })
-    console.log("User updated with new project:", user);
+    // console.log("User updated with new project:", user);
     // adding project to all members project list
     if( members && members.length > 0) {
       for (const member of members) {
