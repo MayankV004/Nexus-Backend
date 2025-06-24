@@ -17,6 +17,6 @@ export const setCookies = (res , accessToken , refreshToken)=>{
 }
 
 export const removeCookies = (res)=>{
-    res.clearCookie('accessToken',cookieOptions);
-    res.clearCookie('refreshToken',cookieOptions);
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
 }
