@@ -4,6 +4,7 @@ import {User} from '../models/index.js';
 export const protectRoute = async (req, res, next) => {
   try {
     const token = req.cookies.accessToken|| req.body.accessToken || req.headers.authorization?.split(' ')[1];
+    console.log(token)
     
     
     if (!token) {
