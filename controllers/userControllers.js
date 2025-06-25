@@ -18,6 +18,8 @@ export const getUserProfile = async (req, res) => {
       .populate('assignedIssues.issueId', 'title status priority dueDate projectId')
       .select('-password -refreshToken -verificationToken -resetPasswordToken');
 
+
+
     if (!user) {
       return res.status(404).json({
         success: false,
