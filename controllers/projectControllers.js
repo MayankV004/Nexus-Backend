@@ -94,6 +94,7 @@ export const createProject = async (req, res) => {
     // console.log("Creating project with data:", req.body);
     const creatorId = req.user._id
 
+
     // Check required fields
     if (!name || name.trim() === '') {
       return res.status(400).json({
@@ -131,14 +132,14 @@ export const createProject = async (req, res) => {
     const user = await User.findByIdAndUpdate({_id : creatorId}, {
       $push:{
         projects:{
-          projectid: savedProject._id,
-          role: "Creator",
+          projectId: savedProject._id,
+          role: "admin",
           joinedAt: new Date(),
           isActive: true
         }
       }
     })
-    // console.log("User updated with new project:", user);
+    console.log("User updated with new project:", user);
     // adding project to all members project list
     if( members && members.length > 0) {
       for (const member of members) {
@@ -147,7 +148,7 @@ export const createProject = async (req, res) => {
           await User.findByIdAndUpdate(user._id, {
             $push: {
               projects: {
-                projectid: savedProject._id,
+                projectId: savedProject._id,
                 role: member.role,
                 joinedAt: new Date(),
                 isActive: true
