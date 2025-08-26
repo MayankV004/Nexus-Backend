@@ -240,6 +240,10 @@ export const verifyEmail = async (req, res) => {
           lastLogin: user.lastLogin,
         },
       },
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
     });
   } catch (error) {
     console.error("Email verification error:", error);
