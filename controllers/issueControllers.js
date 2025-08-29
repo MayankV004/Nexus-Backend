@@ -33,7 +33,7 @@ export const getAllIssues = async (req, res) => {
       .filter((issue) => issue.status !== "Done" && issue.issueId)
       .map((issue) => ({
         ...issue.issueId.toObject(),
-        stats: issue.status,
+        status: issue.status,
       }))
       .sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt)); // Sort by createdAt date
     //  console.log(issues);
