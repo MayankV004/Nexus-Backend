@@ -17,7 +17,7 @@ export const sendVerificationEmail = async (email, firstName, otp) => {
     subject: "Verify Your Email Address",
     html: `
       <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <h2>Welcome to Finora, ${firstName}!</h2>
+        <h2>Welcome to Nexus, ${firstName}!</h2>
         <p>Thank you for signing up. Please use the OTP below to verify your email address and complete your registration.</p>
         <div style="text-align: center; margin: 30px 0;">
           <div style="background-color: #007bff; color: white; padding: 20px; 

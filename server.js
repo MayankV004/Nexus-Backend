@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 connectDB()
 
 const corsOptions = { 
-  origin:["http://localhost:3000", "https://nexus-frontend-xi.vercel.app"],
+  origin:["http://localhost:3000", "https://nexus-frontend-xi.vercel.app", "https://www.mayanknexus.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",

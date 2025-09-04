@@ -10,7 +10,7 @@ const validateObjectId = (id) => {
 export const getUserProfile = async (req, res) => {
   try {
     const  userId  = req.params.userId || req.user?._id; 
-    console.log("User ID:", userId);
+    // console.log("User ID:", userId);
     validateObjectId(userId);
 
     const user = await User.findById(userId)
