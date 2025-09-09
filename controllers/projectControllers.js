@@ -139,7 +139,7 @@ export const createProject = async (req, res) => {
         }
       }
     })
-    console.log("User updated with new project:", user);
+    // console.log("User updated with new project:", user);
     // adding project to all members project list
     if( members && members.length > 0) {
       for (const member of members) {
