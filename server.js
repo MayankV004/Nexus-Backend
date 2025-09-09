@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth-routes.js";
 import projectRoutes from "./routes/project-routes.js";
 import issueRoutes from "./routes/issue-routes.js";
 import cron from "node-cron";
+import https from 'https';
 
 dotenv.config();
 const app = express();
@@ -56,7 +57,7 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, 
+  max: 50, 
   message: {
     success: false,
     message: "Too many authentication requests, please try again later.",
