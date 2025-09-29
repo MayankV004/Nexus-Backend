@@ -59,7 +59,7 @@ export const signUp = async (req, res) => {
       verificationToken: hashedOTP,
       verificationTokenExpires: otpExpires,
     });
-
+    console.log("Pending user created:", pendingUser);
     await pendingUser.save();
     
     // Send verification email
@@ -95,6 +95,7 @@ export const login = async (req, res) => {
     
     const { email, password } = result.data;
     const user = await User.findOne({ email }).select("+password");
+    console.log("User found for login:", user);
 
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
@@ -219,6 +220,10 @@ export const verifyEmail = async (req, res) => {
       password: pendingUser.password, // Already hashed
       role: "developer",
       isEmailVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+
+      
     });
 
     await user.save();
@@ -241,6 +246,7 @@ export const verifyEmail = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
     user.lastLogin = new Date();
+    console.log("New user created:", user);
     await user.save();
     
     setCookies(res, accessToken, refreshToken);
