@@ -12,10 +12,8 @@ import projectRoutes from "./routes/project-routes.js";
 import issueRoutes from "./routes/issue-routes.js";
 import cron from "node-cron";
 import https from 'https';
-import { startCleanupJob } from './services/cleanupService.js';
 
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 connectDB()
@@ -130,8 +128,6 @@ if (process.env.NODE_ENV === "production" && process.env.RENDER_EXTERNAL_URL) {
   console.log("Cron job scheduled to keep server alive every 10 minutes");
 }
 
-// Start cleanup service for pending users
-startCleanupJob();
 
 app.listen(PORT, ()=>{
     console.log("Server is Running on PORT 5000!")
