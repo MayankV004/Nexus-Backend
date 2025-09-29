@@ -1,4 +1,4 @@
-import { User } from "../models/index.js";
+import { User, PendingUser } from "../models/index.js";
 import * as jwt from "../utils/jwt.js";
 import * as emailService from "../services/emailService.js";
 import { setCookies, removeCookies } from "../utils/cookies.js";
@@ -31,38 +31,45 @@ export const signUp = async (req, res) => {
       });
     }
 
-    const isExist = await User.findOne({ email });
-    if (isExist) {
+    // Check if user already exists in main User collection
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }] 
+    });
+    
+    if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "Email already registered!",
+        message: "Email or username already registered!",
       });
     }
 
     const { otp, hashedOTP, otpExpires } = generateOTP();
 
-    // creating new user
-    const user = new User({
+    // Remove any existing pending registration for this email/username
+    await PendingUser.deleteMany({ 
+      $or: [{ email }, { username }] 
+    });
+
+    // Create pending user
+    const pendingUser = new PendingUser({
       name,
       username,
       email,
-      password,
-      role: "developer",
+      password, // Will be hashed by pre-save hook
       verificationToken: hashedOTP,
       verificationTokenExpires: otpExpires,
     });
 
-    await user.save();
+    await pendingUser.save();
     
-    // send verification email
+    // Send verification email
     await emailService.sendVerificationEmail(email, name, otp);
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful. Please check your email to verify your account.",
-      data:{
-        email: user.email,
-
+      message: "Registration initiated. Please check your email to verify your account.",
+      data: {
+        email: pendingUser.email,
       }
     });
   } catch (error) {
@@ -169,27 +176,21 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({
+    // Find pending user
+    const pendingUser = await PendingUser.findOne({
       email,
       verificationTokenExpires: { $gt: new Date() },
     });
 
-    if (!user) {
+    if (!pendingUser) {
       return res.status(404).json({
         success: false,
-        message: "User not found or verification token expired",
-      });
-    }
-    
-    if (user.isEmailVerified) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already verified",
+        message: "Registration not found or verification token expired. Please register again.",
       });
     }
 
-    // verify OTP
-    const isValidOTP = await verifyOTP(otp, user.verificationToken);
+    // Verify OTP
+    const isValidOTP = await verifyOTP(otp, pendingUser.verificationToken);
     if (!isValidOTP) {
       return res.status(400).json({
         success: false,
@@ -197,12 +198,35 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
-    // verify email
-    user.isEmailVerified = true;
-    user.verificationToken = null;
-    user.verificationTokenExpires = null;
+    // Check again if user exists (race condition protection)
+    const existingUser = await User.findOne({ 
+      $or: [{ email: pendingUser.email }, { username: pendingUser.username }] 
+    });
+    
+    if (existingUser) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(409).json({
+        success: false,
+        message: "Email or username already registered!",
+      });
+    }
 
-    // Setting Tokens
+    // Create verified user
+    const user = new User({
+      name: pendingUser.name,
+      username: pendingUser.username,
+      email: pendingUser.email,
+      password: pendingUser.password, // Already hashed
+      role: "developer",
+      isEmailVerified: true,
+    });
+
+    await user.save();
+
+    // Remove pending user
+    await PendingUser.deleteOne({ _id: pendingUser._id });
+
+    // Generate tokens
     const accessToken = jwt.generateAccessToken({
       userId: user._id,
       email: user.email,
@@ -226,7 +250,7 @@ export const verifyEmail = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message: "Email verified successfully and account created",
       data: {
         user: {
           id: user._id,
@@ -265,29 +289,32 @@ export const resendOtp = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    if (user.isEmailVerified) {
+    // Check if user is already verified
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser.isEmailVerified) {
       return res.status(400).json({
         success: false,
         message: "Email already verified",
       });
     }
 
+    // Find pending user
+    const pendingUser = await PendingUser.findOne({ email });
+    if (!pendingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found. Please register again.",
+      });
+    }
+
     const { otp, hashedOTP, otpExpires } = generateOTP();
 
-    user.verificationToken = hashedOTP;
-    user.verificationTokenExpires = otpExpires;
-    await user.save();
+    pendingUser.verificationToken = hashedOTP;
+    pendingUser.verificationTokenExpires = otpExpires;
+    await pendingUser.save();
 
-    // send verification email
-    await emailService.sendVerificationEmail(user.email, user.name, otp);
+    // Send verification email
+    await emailService.sendVerificationEmail(pendingUser.email, pendingUser.name, otp);
     
     res.status(200).json({
       success: true,
