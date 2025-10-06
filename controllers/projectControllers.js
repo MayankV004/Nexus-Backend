@@ -91,9 +91,7 @@ export const getProjectById = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { name, description, priority, dueDate, template, tags, members } = req.body;
-    // console.log("Creating project with data:", req.body);
-    const creatorId = req.user._id
-
+    const creatorId = req.user._id;
 
     // Check required fields
     if (!name || name.trim() === '') {
@@ -115,7 +113,35 @@ export const createProject = async (req, res) => {
       }
     }
 
-    // console.log("Creating project with creatorId:", creatorId);
+    // Get creator's details
+    const creator = await User.findById(creatorId);
+    if (!creator) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Create members array with creator as admin
+    const projectMembers = [
+      {
+        name: creator.name,
+        email: creator.email,
+        role: 'admin',
+        avatar: creator.avatar || ''
+      }
+    ];
+
+    // Add other members if provided, avoiding duplicates
+    if (members && Array.isArray(members)) {
+      for (const member of members) {
+        // Check if member email is not the same as creator's email
+        if (member.email !== creator.email) {
+          projectMembers.push(member);
+        }
+      }
+    }
+
     const project = new Project({
       name: name.trim(),
       description: description || '',
@@ -123,37 +149,48 @@ export const createProject = async (req, res) => {
       dueDate,
       template: template || '',
       tags: tags || [],
-      members: members || []
+      members: projectMembers
     });
-    // console.log("Project object created:", project);
+
     const savedProject = await project.save();
 
-    // Adding project to creator's project list
-    const user = await User.findByIdAndUpdate({_id : creatorId}, {
-      $push:{
-        projects:{
+    // Add project to creator's project list
+    await User.findByIdAndUpdate(creatorId, {
+      $push: {
+        projects: {
           projectId: savedProject._id,
-          role: "admin",
+          role: 'admin',
           joinedAt: new Date(),
           isActive: true
         }
       }
-    })
-    // console.log("User updated with new project:", user);
-    // adding project to all members project list
-    if( members && members.length > 0) {
+    });
+
+    // Add project to all other members' project lists
+    if (members && members.length > 0) {
       for (const member of members) {
-        const TeamMember = await User.findOneAndUpdate({ email: member.email })
-        if( TeamMember && !user ) {
-          await User.findByIdAndUpdate(user._id, {
-            $push: {
-              projects: {
-                projectId: savedProject._id,
-                role: member.role,
-                joinedAt: new Date(),
-                isActive: true
+        // Skip if it's the creator
+        if (member.email === creator.email) continue;
+
+        const teamMember = await User.findOne({ email: member.email });
+        if (teamMember) {
+          // Check if project already exists in user's projects
+          const existingProject = teamMember.projects.find(
+            p => p.projectId.toString() === savedProject._id.toString()
+          );
+          
+          if (!existingProject) {
+            await User.findByIdAndUpdate(teamMember._id, {
+              $push: {
+                projects: {
+                  projectId: savedProject._id,
+                  role: member.role,
+                  joinedAt: new Date(),
+                  isActive: true
+                }
               }
-            }})
+            });
+          }
         }
       }
     }
