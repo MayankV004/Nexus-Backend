@@ -4,7 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --detectOpenHandles --forceExit",
     "start": "nodemon server.js"
   },
   "keywords": [],
@@ -26,5 +28,11 @@
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
     "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "@shelf/jest-mongodb": "^5.2.2",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.2.3",
+    "supertest": "^7.1.4"
   }
 }
